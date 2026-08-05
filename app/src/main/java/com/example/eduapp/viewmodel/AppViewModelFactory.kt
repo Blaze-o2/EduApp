@@ -2,10 +2,14 @@ package com.example.eduapp.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.eduapp.database.AppDao
+import com.example.eduapp.data.PuzzleRepository
 
-class AppViewModelFactory(private val dao: AppDao) : ViewModelProvider.Factory {
+class AppViewModelFactory(private val repository: PuzzleRepository) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return AppViewModel(dao) as T
+        if (modelClass.isAssignableFrom(AppViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return AppViewModel(repository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
