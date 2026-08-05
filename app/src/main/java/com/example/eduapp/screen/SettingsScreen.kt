@@ -15,7 +15,6 @@ import com.example.eduapp.viewmodel.AppViewModel
 @Composable
 fun SettingsScreen(navController: NavController, viewModel: AppViewModel) {
     val gameState by viewModel.gameState.collectAsStateWithLifecycle()
-    var soundEnabled by remember { mutableStateOf(true) }
     var difficulty by remember(gameState.difficultyLevel) { mutableStateOf(gameState.difficultyLevel.toFloat()) }
 
     Scaffold(
@@ -40,8 +39,8 @@ fun SettingsScreen(navController: NavController, viewModel: AppViewModel) {
                 headlineContent = { Text("Sound Effects") },
                 trailingContent = {
                     Switch(
-                        checked = soundEnabled,
-                        onCheckedChange = { soundEnabled = it }
+                        checked = gameState.soundEnabled,
+                        onCheckedChange = { viewModel.toggleSound(it) }
                     )
                 }
             )

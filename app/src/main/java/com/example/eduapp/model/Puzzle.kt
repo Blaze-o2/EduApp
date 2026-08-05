@@ -22,5 +22,7 @@ data class GameState(
     val playerName: String? = null,
     val incorrectAttempts: Int = 0,
     val maxAttempts: Int = 5,
-    val difficultyLevel: Int = 1 // 1: Easy, 2: Medium, 3: Hard
+    val difficultyLevel: Int = 1, // 1: Easy, 2: Medium, 3: Hard
+    val showStartDialog: Boolean = false,
+    val soundEnabled: Boolean = true
 )

@@ -90,4 +90,22 @@ fun SelectPlayerScreen(navController: NavController, viewModel: AppViewModel) {
             }
         }
     }
+
+    if (viewModel.gameState.collectAsStateWithLifecycle().value.showStartDialog) {
+        AlertDialog(
+            onDismissRequest = { /* Don't dismiss by clicking outside */ },
+            title = { Text("Game in Progress") },
+            text = { Text("Would you like to continue your saved game or start a new one?") },
+            confirmButton = {
+                Button(onClick = { viewModel.startGame(false); navController.navigate("game") }) {
+                    Text("Continue")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.startGame(true); navController.navigate("game") }) {
+                    Text("New Game")
+                }
+            }
+        )
+    }
 }

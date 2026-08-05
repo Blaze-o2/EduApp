@@ -12,5 +12,10 @@ data class User(
     val totalScore: Int = 0,
     val highScore: Int = 0,
     val puzzlesSolved: Int = 0,
-    val lastSyncTimestamp: Long = System.currentTimeMillis()
+    val lastSyncTimestamp: Long = System.currentTimeMillis(),
+    // Saved game state for "Continue" feature
+    val savedLevel: Int = 1,
+    val savedScore: Int = 0,
+    val savedIncorrectAttempts: Int = 0,
+    val savedDifficulty: Int = 1
 )

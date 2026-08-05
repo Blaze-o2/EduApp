@@ -14,6 +14,9 @@ interface AppDao {
     @Query("SELECT * FROM users ORDER BY id DESC")
     fun getAllUsers(): Flow<List<User>>
 
+    @Query("SELECT * FROM users")
+    suspend fun getAllUsersList(): List<User>
+
     @Query("SELECT * FROM users WHERE id = :id")
     suspend fun getUserById(id: Int): User?
 

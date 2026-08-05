@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlin.random.Random
 
 class PuzzleRepository(
-    private val dao: AppDao,
+    val dao: AppDao,
     private val service: PuzzleService
 ) {
     val allUsers: Flow<List<User>> = dao.getAllUsers()

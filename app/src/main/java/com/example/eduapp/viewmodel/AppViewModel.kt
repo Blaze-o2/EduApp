@@ -6,13 +6,17 @@ import com.example.eduapp.data.PuzzleRepository
 import com.example.eduapp.database.User
 import com.example.eduapp.model.GameState
 import com.example.eduapp.model.Puzzle
+import com.example.eduapp.util.SoundManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class AppViewModel(private val repository: PuzzleRepository) : ViewModel() {
+class AppViewModel(
+    private val repository: PuzzleRepository,
+    private val soundManager: SoundManager? = null
+) : ViewModel() {
 
     private val _gameState = MutableStateFlow(GameState())
     val gameState: StateFlow<GameState> = _gameState.asStateFlow()
@@ -24,7 +28,59 @@ class AppViewModel(private val repository: PuzzleRepository) : ViewModel() {
     }
 
     fun selectPlayer(name: String) {
-        _gameState.update { it.copy(playerName = name) }
+        viewModelScope.launch {
+            // Find existing user to see if there's a saved game
+            val allUsers = repository.dao.getAllUsersList() // I should add this helper to DAO or Repository
+            val existingUser = allUsers.find { it.username == name }
+            
+            _gameState.update { it.copy(
+                playerName = name,
+                showStartDialog = existingUser != null && (existingUser.savedLevel > 1 || existingUser.savedScore > 0)
+            ) }
+            
+            if (!_gameState.value.showStartDialog) {
+                startGame(true)
+            }
+        }
+    }
+    
+    // I need a way to get existing user data synchronously or via a suspend function
+    // Let's assume I can get it from the flow or I'll add a method to Repository
+
+    fun startGame(isNew: Boolean) {
+        viewModelScope.launch {
+            if (isNew) {
+                _gameState.update { it.copy(
+                    score = 0,
+                    level = 1,
+                    incorrectAttempts = 0,
+                    isGameOver = false,
+                    showStartDialog = false
+                ) }
+            } else {
+                // Continue game - find user data
+                // For simplicity, we'll need to fetch the user from DB
+                val name = _gameState.value.playerName ?: return@launch
+                val allUsers = repository.dao.getAllUsersList()
+                val user = allUsers.find { it.username == name }
+                user?.let { u ->
+                    _gameState.update { it.copy(
+                        score = u.savedScore,
+                        level = u.savedLevel,
+                        incorrectAttempts = u.savedIncorrectAttempts,
+                        difficultyLevel = u.savedDifficulty,
+                        maxAttempts = when(u.savedDifficulty) {
+                            1 -> 5
+                            2 -> 3
+                            else -> 1
+                        },
+                        isGameOver = false,
+                        showStartDialog = false
+                    ) }
+                }
+            }
+            loadNewPuzzle()
+        }
     }
 
     fun setDifficulty(level: Int) {
@@ -34,7 +90,13 @@ class AppViewModel(private val repository: PuzzleRepository) : ViewModel() {
             else -> 1
         }
         _gameState.update { it.copy(difficultyLevel = level, maxAttempts = maxAtt) }
-        loadNewPuzzle() // Refresh puzzle with new difficulty
+        loadNewPuzzle()
+        _gameState.value.playerName?.let { saveProgress(it) } // Persist preference
+    }
+
+    fun toggleSound(enabled: Boolean) {
+        _gameState.update { it.copy(soundEnabled = enabled) }
+        soundManager?.setEnabled(enabled)
     }
 
     fun loadNewPuzzle() {
@@ -51,6 +113,7 @@ class AppViewModel(private val repository: PuzzleRepository) : ViewModel() {
         val userAnswer = answerStr.toIntOrNull()
         
         if (userAnswer == currentPuzzle.answer) {
+            soundManager?.playSuccess()
             _gameState.update { current ->
                 val addedScore = com.example.eduapp.util.MathUtils.calculateScore(10, current.level, 10)
                 val newScore = current.score + addedScore
@@ -65,6 +128,7 @@ class AppViewModel(private val repository: PuzzleRepository) : ViewModel() {
             }
             _gameState.value.playerName?.let { saveProgress(it) }
         } else {
+            soundManager?.playError()
             val nextIncorrect = _gameState.value.incorrectAttempts + 1
             val isLost = nextIncorrect >= _gameState.value.maxAttempts
             
@@ -102,12 +166,17 @@ class AppViewModel(private val repository: PuzzleRepository) : ViewModel() {
 
     fun saveProgress(username: String) {
         viewModelScope.launch {
+            val current = _gameState.value
             val user = User(
                 username = username,
-                currentLevel = _gameState.value.level,
-                totalScore = _gameState.value.score,
-                highScore = _gameState.value.score,
-                puzzlesSolved = if (_gameState.value.score > 0) _gameState.value.score / 10 else 0
+                currentLevel = current.level,
+                totalScore = current.score,
+                highScore = current.score,
+                puzzlesSolved = if (current.score > 0) current.score / 10 else 0,
+                savedLevel = current.level,
+                savedScore = current.score,
+                savedIncorrectAttempts = current.incorrectAttempts,
+                savedDifficulty = current.difficultyLevel
             )
             repository.insertUser(user)
         }
@@ -117,5 +186,10 @@ class AppViewModel(private val repository: PuzzleRepository) : ViewModel() {
         viewModelScope.launch {
             repository.clearAllUsers()
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        soundManager?.release()
     }
 }
