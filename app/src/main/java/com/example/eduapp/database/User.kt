@@ -13,3 +13,4 @@ data class User(
     val duration: Int = 0,
     val date: Long = System.currentTimeMillis() // default current timestamp
 )
+
