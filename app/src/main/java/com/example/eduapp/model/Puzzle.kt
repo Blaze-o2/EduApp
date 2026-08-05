@@ -18,5 +18,9 @@ data class GameState(
     val isGameOver: Boolean = false,
     val message: String = "",
     val showResultDialog: Boolean = false,
-    val lastSolvedAnswer: Int? = null
+    val lastSolvedAnswer: Int? = null,
+    val playerName: String? = null,
+    val incorrectAttempts: Int = 0,
+    val maxAttempts: Int = 5,
+    val difficultyLevel: Int = 1 // 1: Easy, 2: Medium, 3: Hard
 )

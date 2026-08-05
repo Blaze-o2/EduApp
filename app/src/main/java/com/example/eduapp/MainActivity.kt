@@ -70,10 +70,13 @@ fun AppNav() {
             GameScreen(navController, appViewModel)
         }
         composable("settings") {
-            SettingsScreen(navController)
+            SettingsScreen(navController, appViewModel)
         }
         composable("stats") {
             StatisticsScreen(navController, appViewModel)
+        }
+        composable("selectPlayer") {
+            SelectPlayerScreen(navController, appViewModel)
         }
     }
 }

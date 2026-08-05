@@ -37,7 +37,7 @@ fun LandingScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(48.dp))
             
             Button(
-                onClick = { navController.navigate("game") },
+                onClick = { navController.navigate("selectPlayer") },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Start Game")

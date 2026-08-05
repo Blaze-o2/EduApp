@@ -23,15 +23,30 @@ class AppViewModel(private val repository: PuzzleRepository) : ViewModel() {
         loadNewPuzzle()
     }
 
+    fun selectPlayer(name: String) {
+        _gameState.update { it.copy(playerName = name) }
+    }
+
+    fun setDifficulty(level: Int) {
+        val maxAtt = when(level) {
+            1 -> 5
+            2 -> 3
+            else -> 1
+        }
+        _gameState.update { it.copy(difficultyLevel = level, maxAttempts = maxAtt) }
+    }
+
     fun loadNewPuzzle() {
         viewModelScope.launch {
             val puzzle = repository.fetchNewPuzzle(_gameState.value.level)
-            _gameState.update { it.copy(currentPuzzle = puzzle, message = "") }
+            _gameState.update { it.copy(currentPuzzle = puzzle, message = "", incorrectAttempts = 0) }
         }
     }
 
     fun submitAnswer(answerStr: String) {
         val currentPuzzle = _gameState.value.currentPuzzle ?: return
+        if (_gameState.value.isGameOver) return
+
         val userAnswer = answerStr.toIntOrNull()
         
         if (userAnswer == currentPuzzle.answer) {
@@ -41,20 +56,46 @@ class AppViewModel(private val repository: PuzzleRepository) : ViewModel() {
                 
                 current.copy(
                     score = newScore,
-                    level = current.level + 1, // Level up after each successful answer
+                    level = current.level + 1,
                     message = "Correct!",
                     showResultDialog = true,
                     lastSolvedAnswer = currentPuzzle.answer
                 )
             }
-            saveProgress("Player1") // Automatically save progress for default user
+            _gameState.value.playerName?.let { saveProgress(it) }
         } else {
-            _gameState.update { it.copy(message = "Wrong answer, try again!") }
+            val nextIncorrect = _gameState.value.incorrectAttempts + 1
+            val isLost = nextIncorrect >= _gameState.value.maxAttempts
+            
+            _gameState.update { 
+                it.copy(
+                    incorrectAttempts = nextIncorrect,
+                    isGameOver = isLost,
+                    message = if (isLost) "Game Over! You've run out of attempts." else "Wrong answer, try again! (${_gameState.value.maxAttempts - nextIncorrect} left)"
+                )
+            }
+            
+            if (isLost) {
+                _gameState.value.playerName?.let { saveProgress(it) }
+            }
         }
     }
 
     fun dismissResultDialog() {
         _gameState.update { it.copy(showResultDialog = false) }
+        loadNewPuzzle()
+    }
+
+    fun resetGame() {
+        _gameState.update { 
+            it.copy(
+                score = 0,
+                level = 1,
+                isGameOver = false,
+                incorrectAttempts = 0,
+                message = ""
+            )
+        }
         loadNewPuzzle()
     }
 
@@ -64,8 +105,8 @@ class AppViewModel(private val repository: PuzzleRepository) : ViewModel() {
                 username = username,
                 currentLevel = _gameState.value.level,
                 totalScore = _gameState.value.score,
-                highScore = _gameState.value.score, // Simple logic for now
-                puzzlesSolved = _gameState.value.score / 10
+                highScore = _gameState.value.score,
+                puzzlesSolved = if (_gameState.value.score > 0) _gameState.value.score / 10 else 0
             )
             repository.insertUser(user)
         }

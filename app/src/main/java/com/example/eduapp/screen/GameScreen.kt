@@ -79,11 +79,19 @@ fun GameScreen(navController: NavController, viewModel: AppViewModel) {
                     Text(
                         text = gameState.message,
                         color = if (gameState.message.contains("Correct")) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(vertical = 8.dp)
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Text(
+                    "Attempts: ${gameState.maxAttempts - gameState.incorrectAttempts} / ${gameState.maxAttempts}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
                     onClick = {
@@ -91,7 +99,8 @@ fun GameScreen(navController: NavController, viewModel: AppViewModel) {
                         userAnswer = ""
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = !gameState.isGameOver
                 ) {
                     Text("Submit")
                 }
@@ -121,6 +130,22 @@ fun GameScreen(navController: NavController, viewModel: AppViewModel) {
             confirmButton = {
                 Button(onClick = { viewModel.dismissResultDialog() }) {
                     Text("Next Level")
+                }
+            }
+        )
+    }
+
+    if (gameState.isGameOver) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text("Game Over") },
+            text = { Text("You've run out of attempts! Better luck next time.") },
+            confirmButton = {
+                Button(onClick = { 
+                    viewModel.resetGame()
+                    navController.popBackStack()
+                }) {
+                    Text("Back to Home")
                 }
             }
         )
