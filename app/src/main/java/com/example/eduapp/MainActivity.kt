@@ -47,7 +47,7 @@ fun AppNav() {
             context,
             AppDatabase::class.java,
             "app_db"
-        ).build()
+        ).fallbackToDestructiveMigration().build()
 
         val json = Json { ignoreUnknownKeys = true }
         val retrofit = Retrofit.Builder()
