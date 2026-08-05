@@ -16,5 +16,7 @@ data class GameState(
     val score: Int = 0,
     val level: Int = 1,
     val isGameOver: Boolean = false,
-    val message: String = ""
+    val message: String = "",
+    val showResultDialog: Boolean = false,
+    val lastSolvedAnswer: Int? = null
 )

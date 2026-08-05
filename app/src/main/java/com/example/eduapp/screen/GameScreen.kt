@@ -106,4 +106,23 @@ fun GameScreen(navController: NavController, viewModel: AppViewModel) {
             }
         }
     }
+
+    if (gameState.showResultDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissResultDialog() },
+            title = { Text("Puzzle Solved!") },
+            text = {
+                Column {
+                    Text("Correct! The answer was ${gameState.lastSolvedAnswer}.")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Moving to Level ${gameState.level}...", fontWeight = FontWeight.Bold)
+                }
+            },
+            confirmButton = {
+                Button(onClick = { viewModel.dismissResultDialog() }) {
+                    Text("Next Level")
+                }
+            }
+        )
+    }
 }

@@ -35,21 +35,27 @@ class AppViewModel(private val repository: PuzzleRepository) : ViewModel() {
         val userAnswer = answerStr.toIntOrNull()
         
         if (userAnswer == currentPuzzle.answer) {
-            val newScore = _gameState.value.score + com.example.eduapp.util.MathUtils.calculateScore(10, _gameState.value.level, 10)
-            val newLevel = if (com.example.eduapp.util.MathUtils.isLevelUp(newScore, _gameState.value.level * 100)) _gameState.value.level + 1 else _gameState.value.level
-            
-            _gameState.update { 
-                it.copy(
+            _gameState.update { current ->
+                val addedScore = com.example.eduapp.util.MathUtils.calculateScore(10, current.level, 10)
+                val newScore = current.score + addedScore
+                
+                current.copy(
                     score = newScore,
-                    level = newLevel,
-                    message = "Correct! +${10 * _gameState.value.level} points"
+                    level = current.level + 1, // Level up after each successful answer
+                    message = "Correct!",
+                    showResultDialog = true,
+                    lastSolvedAnswer = currentPuzzle.answer
                 )
             }
-            loadNewPuzzle()
             saveProgress("Player1") // Automatically save progress for default user
         } else {
             _gameState.update { it.copy(message = "Wrong answer, try again!") }
         }
+    }
+
+    fun dismissResultDialog() {
+        _gameState.update { it.copy(showResultDialog = false) }
+        loadNewPuzzle()
     }
 
     fun saveProgress(username: String) {
