@@ -72,21 +72,27 @@ fun SelectPlayerScreen(navController: NavController, viewModel: AppViewModel) {
                         ) {
                             OutlinedTextField(
                                 value = newPlayerName,
-                                onValueChange = { newPlayerName = it },
+                                onValueChange = { newValue ->
+                                    if (newValue.all { it.isLetterOrDigit() || it.isWhitespace() }) {
+                                        newPlayerName = newValue
+                                    }
+                                },
                                 label = { Text("Player Name") },
                                 modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(12.dp),
+                                singleLine = true
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Button(
                                 onClick = {
                                     if (newPlayerName.isNotBlank()) {
-                                        viewModel.selectPlayer(newPlayerName)
+                                        viewModel.selectPlayer(newPlayerName.trim())
                                         navController.navigate("game")
                                     }
                                 },
                                 shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.height(56.dp)
+                                modifier = Modifier.height(56.dp),
+                                enabled = newPlayerName.isNotBlank()
                             ) {
                                 Text("Start")
                             }

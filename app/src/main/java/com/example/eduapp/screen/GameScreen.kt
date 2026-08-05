@@ -117,12 +117,17 @@ fun GameScreen(navController: NavController, viewModel: AppViewModel) {
                     Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         OutlinedTextField(
                             value = userAnswer,
-                            onValueChange = { userAnswer = it },
+                            onValueChange = { newValue ->
+                                if (newValue.isEmpty() || (newValue.startsWith("-") && newValue.drop(1).all { it.isDigit() }) || newValue.all { it.isDigit() }) {
+                                    userAnswer = newValue
+                                }
+                            },
                             label = { Text("Enter Answer") },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
                             textStyle = androidx.compose.ui.text.TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center),
-                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                            isError = userAnswer.isEmpty() && gameState.message.isNotEmpty()
                         )
 
                         if (gameState.message.isNotEmpty()) {
@@ -167,7 +172,7 @@ fun GameScreen(navController: NavController, viewModel: AppViewModel) {
                             },
                             modifier = Modifier.fillMaxWidth().height(56.dp),
                             shape = RoundedCornerShape(16.dp),
-                            enabled = !gameState.isGameOver
+                            enabled = !gameState.isGameOver && userAnswer.toIntOrNull() != null
                         ) {
                             Text("Submit Answer", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         }
