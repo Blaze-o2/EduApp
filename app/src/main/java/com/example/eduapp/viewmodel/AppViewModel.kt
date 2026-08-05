@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.eduapp.data.PuzzleRepository
 import com.example.eduapp.database.User
 import com.example.eduapp.model.GameState
-import com.example.eduapp.model.Puzzle
 import com.example.eduapp.util.SoundManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,7 +14,7 @@ import kotlinx.coroutines.launch
 
 class AppViewModel(
     private val repository: PuzzleRepository,
-    private val soundManager: SoundManager? = null
+    private val soundManager: SoundManager? = null,
 ) : ViewModel() {
 
     private val _gameState = MutableStateFlow(GameState())
@@ -29,23 +28,19 @@ class AppViewModel(
 
     fun selectPlayer(name: String) {
         viewModelScope.launch {
-            // Find existing user to see if there's a saved game
-            val allUsers = repository.dao.getAllUsersList() // I should add this helper to DAO or Repository
+            val allUsers = repository.dao.getAllUsersList()
             val existingUser = allUsers.find { it.username == name }
             
             _gameState.update { it.copy(
                 playerName = name,
-                showStartDialog = existingUser != null && (existingUser.savedLevel > 1 || existingUser.savedScore > 0)
+                showStartDialog = (existingUser != null && (existingUser.savedLevel > 1 || existingUser.savedScore > 0))
             ) }
             
             if (!_gameState.value.showStartDialog) {
-                startGame(true)
+                startGame(isNew = true)
             }
         }
     }
-    
-    // I need a way to get existing user data synchronously or via a suspend function
-    // Let's assume I can get it from the flow or I'll add a method to Repository
 
     fun startGame(isNew: Boolean) {
         viewModelScope.launch {
@@ -55,11 +50,10 @@ class AppViewModel(
                     level = 1,
                     incorrectAttempts = 0,
                     isGameOver = false,
-                    showStartDialog = false
+                    showStartDialog = false,
+                    message = ""
                 ) }
             } else {
-                // Continue game - find user data
-                // For simplicity, we'll need to fetch the user from DB
                 val name = _gameState.value.playerName ?: return@launch
                 val allUsers = repository.dao.getAllUsersList()
                 val user = allUsers.find { it.username == name }
@@ -75,7 +69,8 @@ class AppViewModel(
                             else -> 1
                         },
                         isGameOver = false,
-                        showStartDialog = false
+                        showStartDialog = false,
+                        message = ""
                     ) }
                 }
             }
@@ -91,7 +86,7 @@ class AppViewModel(
         }
         _gameState.update { it.copy(difficultyLevel = level, maxAttempts = maxAtt) }
         loadNewPuzzle()
-        _gameState.value.playerName?.let { saveProgress(it) } // Persist preference
+        _gameState.value.playerName?.let { saveProgress(it) }
     }
 
     fun toggleSound(enabled: Boolean) {
@@ -189,7 +184,6 @@ class AppViewModel(
     }
 
     override fun onCleared() {
-        super.onCleared()
         soundManager?.release()
     }
 }

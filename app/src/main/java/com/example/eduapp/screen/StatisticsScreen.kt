@@ -3,8 +3,8 @@ package com.example.eduapp.screen
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -60,10 +60,10 @@ fun StatisticsScreen(navController: NavController, viewModel: AppViewModel) {
             ) {
                 item {
                     Text(
-                        "History of Progress",
+                        text = "History of Progress",
                         modifier = Modifier.padding(16.dp),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                 }
                 items(users) { user ->
@@ -78,7 +78,10 @@ fun StatisticsScreen(navController: NavController, viewModel: AppViewModel) {
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(user.username, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                                Text("Score: ${user.totalScore}", color = MaterialTheme.colorScheme.primary)
+                                Text(
+                                    text = "Score: ${user.totalScore}",
+                                    color = MaterialTheme.colorScheme.primary
+                                )
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             Text("Level reached: ${user.currentLevel}")
@@ -87,7 +90,7 @@ fun StatisticsScreen(navController: NavController, viewModel: AppViewModel) {
                                 SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault()).format(Date(user.lastSyncTimestamp))
                             }
                             Text(
-                                "Date: $date",
+                                text = "Date: $date",
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.secondary
                             )

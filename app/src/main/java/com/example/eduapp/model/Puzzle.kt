@@ -8,7 +8,8 @@ data class Puzzle(
     val equations: List<String>,
     val targetVariable: String,
     val answer: Int,
-    val difficulty: Int
+    val difficulty: Int,
+    val characterImages: Map<String, String> = emptyMap() // character name to drawable resource name
 )
 
 data class GameState(

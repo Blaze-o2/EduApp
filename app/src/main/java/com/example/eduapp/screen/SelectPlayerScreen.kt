@@ -46,7 +46,7 @@ fun SelectPlayerScreen(navController: NavController, viewModel: AppViewModel) {
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
-            Text("Add New Player", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text(text = "Add New Player", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -73,7 +73,7 @@ fun SelectPlayerScreen(navController: NavController, viewModel: AppViewModel) {
             Spacer(modifier = Modifier.height(24.dp))
             
             if (playerNames.isNotEmpty()) {
-                Text("Previous Players", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text(text = "Previous Players", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(modifier = Modifier.height(8.dp))
                 LazyColumn {
                     items(playerNames) { name ->
@@ -91,18 +91,25 @@ fun SelectPlayerScreen(navController: NavController, viewModel: AppViewModel) {
         }
     }
 
-    if (viewModel.gameState.collectAsStateWithLifecycle().value.showStartDialog) {
+    val state by viewModel.gameState.collectAsStateWithLifecycle()
+    if (state.showStartDialog) {
         AlertDialog(
-            onDismissRequest = { /* Don't dismiss by clicking outside */ },
+            onDismissRequest = { },
             title = { Text("Game in Progress") },
             text = { Text("Would you like to continue your saved game or start a new one?") },
             confirmButton = {
-                Button(onClick = { viewModel.startGame(false); navController.navigate("game") }) {
+                Button(onClick = { 
+                    viewModel.startGame(isNew = false)
+                    navController.navigate("game") 
+                }) {
                     Text("Continue")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { viewModel.startGame(true); navController.navigate("game") }) {
+                TextButton(onClick = { 
+                    viewModel.startGame(isNew = true)
+                    navController.navigate("game") 
+                }) {
                     Text("New Game")
                 }
             }

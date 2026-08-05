@@ -1,6 +1,5 @@
 package com.example.eduapp.screen
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -8,11 +7,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.example.eduapp.R
+import com.example.eduapp.model.Puzzle
 import com.example.eduapp.viewmodel.AppViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -27,9 +31,9 @@ fun GameScreen(navController: NavController, viewModel: AppViewModel) {
                 title = { Text("Puzzle - Level ${gameState.level}") },
                 actions = {
                     Text(
-                        "Score: ${gameState.score}",
+                        text = "Score: ${gameState.score}",
                         modifier = Modifier.padding(end = 16.dp),
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                 }
             )
@@ -51,19 +55,24 @@ fun GameScreen(navController: NavController, viewModel: AppViewModel) {
                 ) {
                     Column(modifier = Modifier.padding(24.dp)) {
                         puzzle.equations.forEach { equation ->
-                            Text(
-                                text = equation,
-                                fontSize = 20.sp,
-                                modifier = Modifier.padding(vertical = 4.dp)
-                            )
+                            EquationLine(equation, puzzle)
                         }
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                        Text(
-                            text = "Find the value of: ${puzzle.targetVariable} = ?",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Find the value of: ",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 22.sp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            CharacterImage(puzzle.targetVariable, puzzle, size = 32)
+                            Text(
+                                text = " = ?",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 22.sp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
 
@@ -80,14 +89,14 @@ fun GameScreen(navController: NavController, viewModel: AppViewModel) {
                         text = gameState.message,
                         color = if (gameState.message.contains("Correct")) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(vertical = 8.dp),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        textAlign = TextAlign.Center
                     )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    "Attempts: ${gameState.maxAttempts - gameState.incorrectAttempts} / ${gameState.maxAttempts}",
+                    text = "Attempts: ${gameState.maxAttempts - gameState.incorrectAttempts} / ${gameState.maxAttempts}",
                     style = MaterialTheme.typography.bodySmall
                 )
 
@@ -149,5 +158,51 @@ fun GameScreen(navController: NavController, viewModel: AppViewModel) {
                 }
             }
         )
+    }
+}
+
+@Composable
+fun CharacterImage(name: String, puzzle: Puzzle, size: Int = 24) {
+    val context = LocalContext.current
+    val imageName = puzzle.characterImages[name]
+    val resId = if (imageName != null) {
+        context.resources.getIdentifier(imageName, "drawable", context.packageName)
+    } else 0
+    
+    if (resId != 0) {
+        androidx.compose.foundation.Image(
+            painter = painterResource(id = resId),
+            contentDescription = name,
+            modifier = Modifier.size(size.dp)
+        )
+    } else {
+        // Fallback to name if image not found
+        Text(
+            text = name, 
+            fontSize = (size * 0.7).sp, 
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 2.dp)
+        )
+    }
+}
+
+@Composable
+fun EquationLine(equation: String, puzzle: Puzzle) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(vertical = 4.dp)
+    ) {
+        val tokens = equation.split(" ")
+        tokens.forEach { token ->
+            if (puzzle.characterImages.containsKey(token)) {
+                CharacterImage(token, puzzle, size = 28)
+            } else {
+                Text(
+                    text = " $token ", 
+                    fontSize = 20.sp,
+                    fontWeight = if (token == "=") FontWeight.Bold else FontWeight.Normal
+                )
+            }
+        }
     }
 }
