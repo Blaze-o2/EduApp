@@ -8,9 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -27,6 +25,7 @@ import java.util.*
 @Composable
 fun StatisticsScreen(navController: NavController, viewModel: AppViewModel) {
     val users by viewModel.users.collectAsStateWithLifecycle(initialValue = emptyList())
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -38,7 +37,7 @@ fun StatisticsScreen(navController: NavController, viewModel: AppViewModel) {
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.clearStats() }) {
+                    IconButton(onClick = { showDeleteDialog = true }) {
                         Icon(Icons.Default.Delete, contentDescription = "Clear All")
                     }
                 },
@@ -52,6 +51,7 @@ fun StatisticsScreen(navController: NavController, viewModel: AppViewModel) {
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
+        // ... (rest of the content remains the same)
         if (users.isEmpty()) {
             Box(
                 modifier = Modifier
@@ -128,5 +128,28 @@ fun StatisticsScreen(navController: NavController, viewModel: AppViewModel) {
                 item { Spacer(modifier = Modifier.height(16.dp)) }
             }
         }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Clear Statistics") },
+            text = { Text("Are you sure you want to delete all user statistics? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.clearStats()
+                        showDeleteDialog = false
+                    }
+                ) {
+                    Text("Delete All", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
