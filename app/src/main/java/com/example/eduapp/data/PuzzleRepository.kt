@@ -51,7 +51,7 @@ class PuzzleRepository(
         val selectedChars = characters.shuffled(random).take(3 + difficultyLevel)
         
         val maxVal = 5 + (difficultyLevel * 5) + (gameLevel / 2)
-        val charValues = selectedChars.associateWith { random.nextInt(2, maxVal) } // min 2 for multiplication
+        val charValues = selectedChars.associateWith { random.nextInt(2, maxVal) }.toMutableMap() // min 2 for multiplication
         
         val equations = mutableListOf<String>()
         val puzzleType = random.nextInt(3) // 0: Standard, 1: Product, 2: Mixed
@@ -62,13 +62,21 @@ class PuzzleRepository(
             else -> generateStandardPuzzle(equations, selectedChars, charValues, difficultyLevel)
         }
         
-        val targetChar = selectedChars.random(random)
+        // Extract all unique characters that actually appear in the generated equations
+        val usedChars = mutableSetOf<String>()
+        val nameRegex = characters.joinToString("|").toRegex()
+        equations.forEach { eq ->
+            nameRegex.findAll(eq).forEach { usedChars.add(it.value) }
+        }
+        
+        // Ensure we only pick a target variable that the user can actually solve for
+        val targetChar = if (usedChars.isNotEmpty()) usedChars.random(random) else selectedChars[0]
         
         return Puzzle(
             id = System.currentTimeMillis().toString(),
             equations = equations.shuffled(random),
             targetVariable = targetChar,
-            answer = charValues[targetChar]!!,
+            answer = charValues[targetChar] ?: 0,
             difficulty = difficultyLevel,
             characterImages = selectedChars.associateWith { characterImageMap[it] ?: "ic_placeholder" }
         )
@@ -97,7 +105,7 @@ class PuzzleRepository(
     private fun generateProductPuzzle(
         equations: MutableList<String>,
         selectedChars: List<String>,
-        charValues: Map<String, Int>,
+        charValues: MutableMap<String, Int>,
         random: Random
     ) {
         val char1 = selectedChars[0]
@@ -110,14 +118,18 @@ class PuzzleRepository(
         
         if (selectedChars.size > 3) {
             val char4 = selectedChars[3]
-            equations.add("$char4 / 2 = ${charValues[char4]!! / 2}") // Note: might lose precision if odd
+            // Ensure char4 is even so the division is clean
+            val originalVal = charValues[char4]!!
+            val evenVal = if (originalVal % 2 != 0) originalVal + 1 else originalVal
+            equations.add("$char4 / 2 = ${evenVal / 2}")
+            charValues[char4] = evenVal
         }
     }
 
     private fun generateMixedPuzzle(
         equations: MutableList<String>,
         selectedChars: List<String>,
-        charValues: Map<String, Int>,
+        charValues: MutableMap<String, Int>,
         random: Random
     ) {
         val char1 = selectedChars[0]
