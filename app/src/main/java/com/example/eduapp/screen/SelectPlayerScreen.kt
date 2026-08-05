@@ -4,13 +4,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,14 +35,20 @@ fun SelectPlayerScreen(navController: NavController, viewModel: AppViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Select Player") },
+                title = { Text("Select Player", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                )
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -48,47 +57,70 @@ fun SelectPlayerScreen(navController: NavController, viewModel: AppViewModel) {
                 .padding(16.dp)
         ) {
             item {
-                Text(text = "Add New Player", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                Row(
+                Card(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(4.dp)
                 ) {
-                    OutlinedTextField(
-                        value = newPlayerName,
-                        onValueChange = { newPlayerName = it },
-                        label = { Text("Player Name") },
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = {
-                            if (newPlayerName.isNotBlank()) {
-                                viewModel.selectPlayer(newPlayerName)
-                                navController.navigate("game")
+                    Column(modifier = Modifier.padding(24.dp)) {
+                        Text(text = "Add New Player", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.primary)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            OutlinedTextField(
+                                value = newPlayerName,
+                                onValueChange = { newPlayerName = it },
+                                label = { Text("Player Name") },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Button(
+                                onClick = {
+                                    if (newPlayerName.isNotBlank()) {
+                                        viewModel.selectPlayer(newPlayerName)
+                                        navController.navigate("game")
+                                    }
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.height(56.dp)
+                            ) {
+                                Text("Start")
                             }
                         }
-                    ) {
-                        Text("Start")
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(32.dp))
             }
             
             if (playerNames.isNotEmpty()) {
                 item {
-                    Text(text = "Previous Players", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = "Previous Players", fontWeight = FontWeight.ExtraBold, fontSize = 20.sp, modifier = Modifier.padding(start = 8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
                 items(playerNames) { name ->
-                    ListItem(
-                        headlineContent = { Text(name) },
-                        modifier = Modifier.clickable {
-                            viewModel.selectPlayer(name)
-                            navController.navigate("game")
-                        }
-                    )
-                    HorizontalDivider()
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(1.dp)
+                    ) {
+                        ListItem(
+                            headlineContent = { Text(name, fontWeight = FontWeight.SemiBold, fontSize = 18.sp) },
+                            trailingContent = { Icon(androidx.compose.material.icons.Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
+                            modifier = Modifier.clickable {
+                                viewModel.selectPlayer(name)
+                                navController.navigate("game")
+                            },
+                            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+                        )
+                    }
                 }
             }
         }

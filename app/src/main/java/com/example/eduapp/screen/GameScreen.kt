@@ -1,9 +1,12 @@
 package com.example.eduapp.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -31,16 +34,29 @@ fun GameScreen(navController: NavController, viewModel: AppViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Puzzle - Level ${gameState.level}") },
+                title = { Text("Puzzle - Level ${gameState.level}", fontWeight = FontWeight.Bold) },
                 actions = {
-                    Text(
-                        text = "Score: ${gameState.score}",
-                        modifier = Modifier.padding(end = 16.dp),
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
+                    Surface(
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) {
+                        Text(
+                            text = "Score: ${gameState.score}",
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+                )
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -54,68 +70,108 @@ fun GameScreen(navController: NavController, viewModel: AppViewModel) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 24.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        .padding(bottom = 16.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(24.dp)
                 ) {
-                    Column(modifier = Modifier.padding(24.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .background(androidx.compose.ui.graphics.Brush.verticalGradient(
+                                listOf(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f), MaterialTheme.colorScheme.surface)
+                            ))
+                            .padding(24.dp)
+                    ) {
                         puzzle.equations.forEach { equation ->
                             EquationLine(equation, puzzle)
                         }
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 12.dp),
+                            thickness = 2.dp,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                        )
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Find the value of: ",
+                                text = "Solve: ",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 22.sp,
                                 color = MaterialTheme.colorScheme.primary
                             )
-                            CharacterImage(puzzle.targetVariable, puzzle, size = 32)
+                            CharacterImage(puzzle.targetVariable, puzzle, size = 40)
                             Text(
                                 text = " = ?",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 22.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 24.sp,
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
                 }
 
-                OutlinedTextField(
-                    value = userAnswer,
-                    onValueChange = { userAnswer = it },
-                    label = { Text("Your Answer") },
+                Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                )
-
-                if (gameState.message.isNotEmpty()) {
-                    Text(
-                        text = gameState.message,
-                        color = if (gameState.message.contains("Correct")) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        textAlign = TextAlign.Center
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Text(
-                    text = "Attempts: ${gameState.maxAttempts - gameState.incorrectAttempts} / ${gameState.maxAttempts}",
-                    style = MaterialTheme.typography.bodySmall
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Button(
-                    onClick = {
-                        viewModel.submitAnswer(userAnswer)
-                        userAnswer = ""
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    enabled = !gameState.isGameOver
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(2.dp)
                 ) {
-                    Text("Submit")
+                    Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        OutlinedTextField(
+                            value = userAnswer,
+                            onValueChange = { userAnswer = it },
+                            label = { Text("Enter Answer") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            textStyle = androidx.compose.ui.text.TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center),
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
+                        )
+
+                        if (gameState.message.isNotEmpty()) {
+                            Surface(
+                                color = if (gameState.message.contains("Correct")) Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.padding(top = 8.dp)
+                            ) {
+                                Text(
+                                    text = gameState.message,
+                                    color = if (gameState.message.contains("Correct")) Color(0xFF2E7D32) else Color(0xFFC62828),
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                                    textAlign = TextAlign.Center,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "Attempts",
+                                tint = MaterialTheme.colorScheme.outline,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Attempts: ${gameState.maxAttempts - gameState.incorrectAttempts} / ${gameState.maxAttempts}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Button(
+                            onClick = {
+                                viewModel.submitAnswer(userAnswer)
+                                userAnswer = ""
+                            },
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            enabled = !gameState.isGameOver
+                        ) {
+                            Text("Submit Answer", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
             } ?: Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
@@ -123,8 +179,11 @@ fun GameScreen(navController: NavController, viewModel: AppViewModel) {
             
             Spacer(modifier = Modifier.height(24.dp))
             
-            TextButton(onClick = { navController.popBackStack() }) {
-                Text("Quit Game")
+            TextButton(
+                onClick = { navController.popBackStack() },
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.outline)
+            ) {
+                Text("Quit Game", fontWeight = FontWeight.SemiBold)
             }
         }
     }
