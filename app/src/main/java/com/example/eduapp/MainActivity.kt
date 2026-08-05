@@ -59,8 +59,8 @@ fun AppNav() {
         PuzzleRepository(db.appDao(), service)
     }
 
-    val soundManager = remember { com.example.eduapp.util.SoundManager(context) }
-    val factory = AppViewModelFactory(repository, soundManager)
+    val soundManager = remember { com.example.eduapp.util.SoundManager(context.applicationContext) }
+    val factory = remember(repository, soundManager) { AppViewModelFactory(repository, soundManager) }
     val appViewModel: AppViewModel = viewModel(factory = factory)
 
     NavHost(navController = navController, startDestination = "landing") {

@@ -1,10 +1,13 @@
 package com.example.eduapp.screen
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -15,7 +18,7 @@ import com.example.eduapp.viewmodel.AppViewModel
 @Composable
 fun SettingsScreen(navController: NavController, viewModel: AppViewModel) {
     val gameState by viewModel.gameState.collectAsStateWithLifecycle()
-    var difficulty by remember(gameState.difficultyLevel) { mutableStateOf(gameState.difficultyLevel.toFloat()) }
+    var difficulty by rememberSaveable(gameState.difficultyLevel) { mutableStateOf(gameState.difficultyLevel.toFloat()) }
 
     Scaffold(
         topBar = {
@@ -34,6 +37,7 @@ fun SettingsScreen(navController: NavController, viewModel: AppViewModel) {
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(16.dp)
+                .verticalScroll(rememberScrollState())
         ) {
             ListItem(
                 headlineContent = { Text("Sound Effects") },

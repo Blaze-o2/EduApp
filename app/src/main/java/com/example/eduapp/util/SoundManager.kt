@@ -10,11 +10,12 @@ class SoundManager(context: Context) {
     private val successSoundId: Int
     private val errorSoundId: Int
     private var isEnabled: Boolean = true
+    private val loadedSounds = java.util.Collections.synchronizedSet(mutableSetOf<Int>())
 
     init {
         val audioAttributes = AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_GAME)
-            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .setUsage(AudioAttributes.USAGE_MEDIA)
+            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
             .build()
         
         soundPool = SoundPool.Builder()
@@ -22,14 +23,18 @@ class SoundManager(context: Context) {
             .setAudioAttributes(audioAttributes)
             .build()
 
-        // Safely load sounds if they exist
-        successSoundId = loadSound(context, "success")
-        errorSoundId = loadSound(context, "error")
-    }
+        soundPool.setOnLoadCompleteListener { _, sampleId, status ->
+            if (status == 0) {
+                loadedSounds.add(sampleId)
+            }
+            android.util.Log.d("SoundManager", "Sound loaded: $sampleId, status: $status")
+        }
 
-    private fun loadSound(context: Context, name: String): Int {
-        val id = context.resources.getIdentifier(name, "raw", context.packageName)
-        return if (id != 0) soundPool.load(context, id, 1) else 0
+        // Load sounds directly using R.raw
+        successSoundId = soundPool.load(context, R.raw.success, 1)
+        errorSoundId = soundPool.load(context, R.raw.error, 1)
+        
+        android.util.Log.d("SoundManager", "IDs: success=$successSoundId, error=$errorSoundId")
     }
 
     fun setEnabled(enabled: Boolean) {
@@ -37,11 +42,19 @@ class SoundManager(context: Context) {
     }
 
     fun playSuccess() {
-        if (isEnabled) soundPool.play(successSoundId, 1f, 1f, 0, 0, 1f)
+        android.util.Log.d("SoundManager", "playSuccess called. isEnabled=$isEnabled, successSoundId=$successSoundId, loaded=${loadedSounds.contains(successSoundId)}")
+        if (isEnabled && loadedSounds.contains(successSoundId)) {
+            val result = soundPool.play(successSoundId, 1f, 1f, 1, 0, 1f)
+            android.util.Log.d("SoundManager", "playSuccess result: $result")
+        }
     }
 
     fun playError() {
-        if (isEnabled) soundPool.play(errorSoundId, 1f, 1f, 0, 0, 1f)
+        android.util.Log.d("SoundManager", "playError called. isEnabled=$isEnabled, errorSoundId=$errorSoundId, loaded=${loadedSounds.contains(errorSoundId)}")
+        if (isEnabled && loadedSounds.contains(errorSoundId)) {
+            val result = soundPool.play(errorSoundId, 1f, 1f, 1, 0, 1f)
+            android.util.Log.d("SoundManager", "playError result: $result")
+        }
     }
 
     fun release() {
