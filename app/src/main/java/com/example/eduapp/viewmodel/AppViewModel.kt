@@ -34,12 +34,13 @@ class AppViewModel(private val repository: PuzzleRepository) : ViewModel() {
             else -> 1
         }
         _gameState.update { it.copy(difficultyLevel = level, maxAttempts = maxAtt) }
+        loadNewPuzzle() // Refresh puzzle with new difficulty
     }
 
     fun loadNewPuzzle() {
         viewModelScope.launch {
-            val puzzle = repository.fetchNewPuzzle(_gameState.value.level)
-            _gameState.update { it.copy(currentPuzzle = puzzle, message = "", incorrectAttempts = 0) }
+            val puzzle = repository.fetchNewPuzzle(_gameState.value.difficultyLevel, _gameState.value.level)
+            _gameState.update { it.copy(currentPuzzle = puzzle, message = "") }
         }
     }
 
