@@ -11,7 +11,7 @@ interface AppDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(user: User)
 
-    @Query("SELECT * FROM users ORDER BY id DESC")
+    @Query("SELECT * FROM users ORDER BY lastSyncTimestamp DESC")
     fun getAllUsers(): Flow<List<User>>
 
     @Query("SELECT * FROM users")

@@ -17,5 +17,7 @@ data class User(
     val savedLevel: Int = 1,
     val savedScore: Int = 0,
     val savedIncorrectAttempts: Int = 0,
-    val savedDifficulty: Int = 1
+    val savedDifficulty: Int = 1,
+    val savedPuzzleJson: String? = null,
+    val savedTargetAnswer: Int? = null
 )

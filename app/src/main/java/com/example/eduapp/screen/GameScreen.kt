@@ -28,7 +28,9 @@ import com.example.eduapp.viewmodel.AppViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameScreen(navController: NavController, viewModel: AppViewModel) {
+    // Collect the game state from ViewModel using lifecycle-aware collector
     val gameState by viewModel.gameState.collectAsStateWithLifecycle()
+    // Local state for the text input field
     var userAnswer by rememberSaveable { mutableStateOf("") }
 
     Scaffold(

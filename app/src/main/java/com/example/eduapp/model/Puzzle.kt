@@ -25,5 +25,6 @@ data class GameState(
     val maxAttempts: Int = 5,
     val difficultyLevel: Int = 1, // 1: Easy, 2: Medium, 3: Hard
     val showStartDialog: Boolean = false,
-    val soundEnabled: Boolean = true
+    val soundEnabled: Boolean = true,
+    val navigateToGame: Boolean = false
 )

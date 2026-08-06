@@ -25,7 +25,15 @@ import com.example.eduapp.viewmodel.AppViewModel
 @Composable
 fun SelectPlayerScreen(navController: NavController, viewModel: AppViewModel) {
     val users by viewModel.users.collectAsStateWithLifecycle(initialValue = emptyList())
+    val state by viewModel.gameState.collectAsStateWithLifecycle()
     var newPlayerName by rememberSaveable { mutableStateOf("") }
+
+    LaunchedEffect(state.navigateToGame) {
+        if (state.navigateToGame) {
+            navController.navigate("game")
+            viewModel.onNavigatedToGame()
+        }
+    }
     
     // Get unique player names
     val playerNames = remember(users) {
@@ -87,7 +95,6 @@ fun SelectPlayerScreen(navController: NavController, viewModel: AppViewModel) {
                                 onClick = {
                                     if (newPlayerName.isNotBlank()) {
                                         viewModel.selectPlayer(newPlayerName.trim())
-                                        navController.navigate("game")
                                     }
                                 },
                                 shape = RoundedCornerShape(12.dp),
@@ -122,7 +129,6 @@ fun SelectPlayerScreen(navController: NavController, viewModel: AppViewModel) {
                             trailingContent = { Icon(androidx.compose.material.icons.Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
                             modifier = Modifier.clickable {
                                 viewModel.selectPlayer(name)
-                                navController.navigate("game")
                             },
                             colors = ListItemDefaults.colors(containerColor = Color.Transparent)
                         )
@@ -132,7 +138,6 @@ fun SelectPlayerScreen(navController: NavController, viewModel: AppViewModel) {
         }
     }
 
-    val state by viewModel.gameState.collectAsStateWithLifecycle()
     if (state.showStartDialog) {
         AlertDialog(
             onDismissRequest = { },
@@ -141,7 +146,6 @@ fun SelectPlayerScreen(navController: NavController, viewModel: AppViewModel) {
             confirmButton = {
                 Button(onClick = { 
                     viewModel.startGame(isNew = false)
-                    navController.navigate("game") 
                 }) {
                     Text("Continue")
                 }
@@ -149,7 +153,6 @@ fun SelectPlayerScreen(navController: NavController, viewModel: AppViewModel) {
             dismissButton = {
                 TextButton(onClick = { 
                     viewModel.startGame(isNew = true)
-                    navController.navigate("game") 
                 }) {
                     Text("New Game")
                 }

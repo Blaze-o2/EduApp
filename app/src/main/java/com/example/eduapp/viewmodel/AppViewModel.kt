@@ -6,42 +6,75 @@ import com.example.eduapp.data.PuzzleRepository
 import com.example.eduapp.database.User
 import com.example.eduapp.model.GameState
 import com.example.eduapp.util.SoundManager
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/**
+ * AppViewModel manages the game state and logic for the EduApp.
+ * It coordinates between the repository, sound manager, and the UI.
+ */
 class AppViewModel(
     private val repository: PuzzleRepository,
     private val soundManager: SoundManager? = null,
 ) : ViewModel() {
 
+    // Internal state flow to handle game updates
     private val _gameState = MutableStateFlow(GameState())
+    // Public exposure of state for the UI
     val gameState: StateFlow<GameState> = _gameState.asStateFlow()
 
+    // Json instance for serializing/deserializing puzzles
+    private val json = Json { ignoreUnknownKeys = true }
+
+    // Flow of users from the database for statistics and selection
     val users = repository.allUsers
 
-    init {
-        loadNewPuzzle()
-    }
-
+    /**
+     * Handles player selection. Checks if the player exists to show a "Continue" dialog
+     * or starts a fresh game.
+     */
     fun selectPlayer(name: String) {
         viewModelScope.launch {
             val allUsers = repository.dao.getAllUsersList()
             val existingUser = allUsers.find { it.username == name }
+            // Only show continue dialog if the user exists, has made progress, and hasn't lost the game
+            val shouldShowDialog = (existingUser != null && 
+                                  (existingUser.savedLevel > 1 || existingUser.savedScore > 0) &&
+                                  existingUser.savedIncorrectAttempts < (when(existingUser.savedDifficulty) {
+                                      1 -> 5
+                                      2 -> 3
+                                      else -> 1
+                                  }))
             
             _gameState.update { it.copy(
                 playerName = name,
-                showStartDialog = (existingUser != null && (existingUser.savedLevel > 1 || existingUser.savedScore > 0))
+                showStartDialog = shouldShowDialog,
+                navigateToGame = false
             ) }
             
-            if (!_gameState.value.showStartDialog) {
+            if (!shouldShowDialog) {
                 startGame(isNew = true)
             }
         }
     }
 
+    /**
+     * Resets the flag after the navigation to the game screen has been handled.
+     */
+    fun onNavigatedToGame() {
+        _gameState.update { it.copy(navigateToGame = false) }
+    }
+
+    /**
+     * Starts a game session. 
+     * @param isNew if true, resets progress. If false, attempts to load saved state.
+     */
     fun startGame(isNew: Boolean) {
         viewModelScope.launch {
             if (isNew) {
@@ -51,13 +84,21 @@ class AppViewModel(
                     incorrectAttempts = 0,
                     isGameOver = false,
                     showStartDialog = false,
-                    message = ""
+                    message = "",
+                    currentPuzzle = null,
+                    navigateToGame = true
                 ) }
             } else {
                 val name = _gameState.value.playerName ?: return@launch
                 val allUsers = repository.dao.getAllUsersList()
                 val user = allUsers.find { it.username == name }
                 user?.let { u ->
+                    val savedPuzzle: com.example.eduapp.model.Puzzle? = try {
+                        u.savedPuzzleJson?.let { json.decodeFromString(it) }
+                    } catch (_: Exception) {
+                        null
+                    }
+                    
                     _gameState.update { it.copy(
                         score = u.savedScore,
                         level = u.savedLevel,
@@ -70,21 +111,26 @@ class AppViewModel(
                         },
                         isGameOver = false,
                         showStartDialog = false,
-                        message = ""
+                        message = "",
+                        currentPuzzle = savedPuzzle,
+                        navigateToGame = true
                     ) }
                 }
             }
-            loadNewPuzzle()
+            if (_gameState.value.currentPuzzle == null) {
+                loadNewPuzzle()
+            }
         }
     }
 
     fun setDifficulty(level: Int) {
+        if (_gameState.value.difficultyLevel == level) return
         val maxAtt = when(level) {
             1 -> 5
             2 -> 3
             else -> 1
         }
-        _gameState.update { it.copy(difficultyLevel = level, maxAttempts = maxAtt) }
+        _gameState.update { it.copy(difficultyLevel = level, maxAttempts = maxAtt, currentPuzzle = null) }
         loadNewPuzzle()
         _gameState.value.playerName?.let { saveProgress(it) }
     }
@@ -94,6 +140,9 @@ class AppViewModel(
         soundManager?.setEnabled(enabled)
     }
 
+    /**
+     * Fetches a new puzzle from the repository and updates the state.
+     */
     fun loadNewPuzzle() {
         viewModelScope.launch {
             val puzzle = repository.fetchNewPuzzle(_gameState.value.difficultyLevel, _gameState.value.level)
@@ -101,6 +150,10 @@ class AppViewModel(
         }
     }
 
+    /**
+     * Validates the user's answer against the current puzzle.
+     * Updates score, level, or incorrect attempts accordingly.
+     */
     fun submitAnswer(answerStr: String) {
         val currentPuzzle = _gameState.value.currentPuzzle ?: return
         if (_gameState.value.isGameOver) return
@@ -142,7 +195,7 @@ class AppViewModel(
     }
 
     fun dismissResultDialog() {
-        _gameState.update { it.copy(showResultDialog = false) }
+        _gameState.update { it.copy(showResultDialog = false, currentPuzzle = null) }
         loadNewPuzzle()
     }
 
@@ -153,25 +206,38 @@ class AppViewModel(
                 level = 1,
                 isGameOver = false,
                 incorrectAttempts = 0,
-                message = ""
+                message = "",
+                currentPuzzle = null
             )
         }
         loadNewPuzzle()
     }
 
+    /**
+     * Persists the current game state to the database for the given user.
+     * Updates existing record if it exists, otherwise creates a new one.
+     */
     fun saveProgress(username: String) {
         viewModelScope.launch {
             val current = _gameState.value
+            val allUsers = repository.dao.getAllUsersList()
+            val existingUser = allUsers.find { it.username == username }
+            
             val user = User(
+                id = existingUser?.id ?: 0,
                 username = username,
                 currentLevel = current.level,
                 totalScore = current.score,
-                highScore = current.score,
-                puzzlesSolved = if (current.score > 0) current.score / 10 else 0,
+                // Only update high score if current score is better
+                highScore = maxOf(existingUser?.highScore ?: 0, current.score),
+                // Solved puzzles is level - 1
+                puzzlesSolved = current.level - 1,
                 savedLevel = current.level,
                 savedScore = current.score,
                 savedIncorrectAttempts = current.incorrectAttempts,
-                savedDifficulty = current.difficultyLevel
+                savedDifficulty = current.difficultyLevel,
+                savedPuzzleJson = current.currentPuzzle?.let { json.encodeToString(it) },
+                savedTargetAnswer = current.currentPuzzle?.answer
             )
             repository.insertUser(user)
         }

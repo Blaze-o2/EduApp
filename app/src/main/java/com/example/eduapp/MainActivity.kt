@@ -25,41 +25,39 @@ import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
 class MainActivity : ComponentActivity() {
+    // Repository and SoundManager are kept at the activity level to ensure stability
+    private lateinit var repository: PuzzleRepository
+    private lateinit var soundManager: com.example.eduapp.util.SoundManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Initialize Database, API, and Repository once per activity lifecycle
+        // This avoids costly re-initialization during recompositions
+        val db = AppDatabase.getDatabase(applicationContext)
+
+        val json = Json { ignoreUnknownKeys = true }
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://api.example.com/") // Placeholder URL for the puzzle API
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+            .build()
+        
+        val service = retrofit.create(PuzzleService::class.java)
+        repository = PuzzleRepository(db.appDao(), service)
+        soundManager = com.example.eduapp.util.SoundManager(applicationContext)
+
         enableEdgeToEdge()
         setContent {
             EduAppTheme {
-                AppNav()
+                AppNav(repository, soundManager)
             }
         }
     }
 }
 
 @Composable
-fun AppNav() {
-    val context = LocalContext.current
+fun AppNav(repository: PuzzleRepository, soundManager: com.example.eduapp.util.SoundManager) {
     val navController = rememberNavController()
-    
-    // Initialize Database, API, and Repository
-    val repository = remember {
-        val db = Room.databaseBuilder(
-            context,
-            AppDatabase::class.java,
-            "app_db"
-        ).fallbackToDestructiveMigration(dropAllTables = true).build()
-
-        val json = Json { ignoreUnknownKeys = true }
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://api.example.com/") // Placeholder URL
-            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
-            .build()
-        
-        val service = retrofit.create(PuzzleService::class.java)
-        PuzzleRepository(db.appDao(), service)
-    }
-
-    val soundManager = remember { com.example.eduapp.util.SoundManager(context.applicationContext) }
     val factory = remember(repository, soundManager) { AppViewModelFactory(repository, soundManager) }
     val appViewModel: AppViewModel = viewModel(factory = factory)
 

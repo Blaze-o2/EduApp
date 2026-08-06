@@ -18,10 +18,14 @@ class PuzzleRepository(
 
     suspend fun clearAllUsers() = dao.deleteAll()
 
+    /**
+     * Fetches a puzzle from the remote service, or generates one locally as a fallback.
+     */
     suspend fun fetchNewPuzzle(difficultyLevel: Int, gameLevel: Int): Puzzle {
         return try {
             service.getRandomPuzzle(difficultyLevel)
         } catch (e: Exception) {
+            // Local generation ensures the game is playable offline
             generateLocalPuzzle(difficultyLevel, gameLevel)
         }
     }
@@ -46,12 +50,16 @@ class PuzzleRepository(
         "Wolf" to "img_wolf"
     )
 
+    /**
+     * Generates a random mathematical puzzle based on the selected difficulty and level.
+     */
     private fun generateLocalPuzzle(difficultyLevel: Int, gameLevel: Int): Puzzle {
         val random = Random(System.currentTimeMillis())
         val selectedChars = characters.shuffled(random).take(3 + difficultyLevel)
         
+        // Dynamic value range based on difficulty and progression
         val maxVal = 5 + (difficultyLevel * 5) + (gameLevel / 2)
-        val charValues = selectedChars.associateWith { random.nextInt(2, maxVal) }.toMutableMap() // min 2 for multiplication
+        val charValues = selectedChars.associateWith { random.nextInt(2, maxVal) }.toMutableMap()
         
         val equations = mutableListOf<String>()
         val puzzleType = random.nextInt(3) // 0: Standard, 1: Product, 2: Mixed
