@@ -7,7 +7,4 @@ import retrofit2.http.Query
 interface PuzzleService {
     @GET("puzzles/random")
     suspend fun getRandomPuzzle(@Query("difficulty") difficulty: Int): Puzzle
-
-    @GET("puzzles/daily")
-    suspend fun getDailyPuzzle(): Puzzle
 }

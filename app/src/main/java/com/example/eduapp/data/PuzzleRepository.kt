@@ -12,8 +12,6 @@ class PuzzleRepository(
 ) {
     val allUsers: Flow<List<User>> = dao.getAllUsers()
 
-    suspend fun getUser(id: Int): User? = dao.getUserById(id)
-
     suspend fun insertUser(user: User) = dao.insert(user)
 
     suspend fun clearAllUsers() = dao.deleteAll()

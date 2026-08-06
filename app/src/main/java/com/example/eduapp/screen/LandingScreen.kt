@@ -49,7 +49,7 @@ fun LandingScreen(navController: NavController) {
             ) {
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                     androidx.compose.foundation.Image(
-                        painter = androidx.compose.ui.res.painterResource(id = com.example.eduapp.R.drawable.app_icon),
+                        painter = androidx.compose.ui.res.painterResource(id = com.example.eduapp.R.mipmap.ic_launcher),
                         contentDescription = "App Icon",
                         modifier = Modifier.size(80.dp)
                     )

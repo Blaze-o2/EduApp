@@ -81,7 +81,8 @@ fun SelectPlayerScreen(navController: NavController, viewModel: AppViewModel) {
                             OutlinedTextField(
                                 value = newPlayerName,
                                 onValueChange = { newValue ->
-                                    if (newValue.all { it.isLetterOrDigit() || it.isWhitespace() }) {
+                                    // Allow only letters and whitespace
+                                    if (newValue.all { it.isLetter() || it.isWhitespace() }) {
                                         newPlayerName = newValue
                                     }
                                 },

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.eduapp.data.PuzzleRepository
 import com.example.eduapp.database.User
 import com.example.eduapp.model.GameState
+import com.example.eduapp.model.Puzzle
 import com.example.eduapp.util.SoundManager
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
@@ -77,6 +78,7 @@ class AppViewModel(
      */
     fun startGame(isNew: Boolean) {
         viewModelScope.launch {
+            var shouldLoadNew = isNew
             if (isNew) {
                 _gameState.update { it.copy(
                     score = 0,
@@ -93,12 +95,14 @@ class AppViewModel(
                 val allUsers = repository.dao.getAllUsersList()
                 val user = allUsers.find { it.username == name }
                 user?.let { u ->
-                    val savedPuzzle: com.example.eduapp.model.Puzzle? = try {
-                        u.savedPuzzleJson?.let { json.decodeFromString(it) }
+                    val savedPuzzle: Puzzle? = try {
+                        u.savedPuzzleJson?.let { json.decodeFromString<Puzzle>(it) }
                     } catch (_: Exception) {
                         null
                     }
                     
+                    if (savedPuzzle == null) shouldLoadNew = true
+
                     _gameState.update { it.copy(
                         score = u.savedScore,
                         level = u.savedLevel,
@@ -115,9 +119,9 @@ class AppViewModel(
                         currentPuzzle = savedPuzzle,
                         navigateToGame = true
                     ) }
-                }
+                } ?: run { shouldLoadNew = true }
             }
-            if (_gameState.value.currentPuzzle == null) {
+            if (shouldLoadNew) {
                 loadNewPuzzle()
             }
         }
