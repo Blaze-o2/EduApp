@@ -37,7 +37,7 @@ fun SelectPlayerScreen(navController: NavController, viewModel: AppViewModel) {
     
     // Get unique player names
     val playerNames = remember(users) {
-        users.map { it.username }.distinct()
+        users.asSequence().map { it.username }.distinct().toList()
     }
 
     Scaffold(
@@ -52,7 +52,7 @@ fun SelectPlayerScreen(navController: NavController, viewModel: AppViewModel) {
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
                 )
             )
         },
@@ -81,7 +81,6 @@ fun SelectPlayerScreen(navController: NavController, viewModel: AppViewModel) {
                             OutlinedTextField(
                                 value = newPlayerName,
                                 onValueChange = { newValue ->
-                                    // Allow only letters and whitespace
                                     if (newValue.all { it.isLetter() || it.isWhitespace() }) {
                                         newPlayerName = newValue
                                     }
@@ -89,7 +88,10 @@ fun SelectPlayerScreen(navController: NavController, viewModel: AppViewModel) {
                                 label = { Text("Player Name") },
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(12.dp),
-                                singleLine = true
+                                singleLine = true,
+                                supportingText = {
+                                    Text("Only letters allowed")
+                                }
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Button(
@@ -127,7 +129,7 @@ fun SelectPlayerScreen(navController: NavController, viewModel: AppViewModel) {
                     ) {
                         ListItem(
                             headlineContent = { Text(name, fontWeight = FontWeight.SemiBold, fontSize = 18.sp) },
-                            trailingContent = { Icon(androidx.compose.material.icons.Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
+                            trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
                             modifier = Modifier.clickable {
                                 viewModel.selectPlayer(name)
                             },

@@ -5,11 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.eduapp.data.PuzzleRepository
 import com.example.eduapp.database.User
 import com.example.eduapp.model.GameState
-import com.example.eduapp.model.Puzzle
 import com.example.eduapp.util.SoundManager
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.decodeFromString
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,9 +42,9 @@ class AppViewModel(
             val allUsers = repository.dao.getAllUsersList()
             val existingUser = allUsers.find { it.username == name }
             // Only show continue dialog if the user exists, has made progress, and hasn't lost the game
-            val shouldShowDialog = (existingUser != null && 
+            val shouldShowDialog = existingUser != null && 
                                   (existingUser.savedLevel > 1 || existingUser.savedScore > 0) &&
-                                  existingUser.savedIncorrectAttempts < (when(existingUser.savedDifficulty) {
+                                  (existingUser.savedIncorrectAttempts < (when(existingUser.savedDifficulty) {
                                       1 -> 5
                                       2 -> 3
                                       else -> 1
@@ -56,7 +53,7 @@ class AppViewModel(
             _gameState.update { it.copy(
                 playerName = name,
                 showStartDialog = shouldShowDialog,
-                navigateToGame = false
+                navigateToGame = false,
             ) }
             
             if (!shouldShowDialog) {
@@ -78,7 +75,6 @@ class AppViewModel(
      */
     fun startGame(isNew: Boolean) {
         viewModelScope.launch {
-            var shouldLoadNew = isNew
             if (isNew) {
                 _gameState.update { it.copy(
                     score = 0,
@@ -95,14 +91,12 @@ class AppViewModel(
                 val allUsers = repository.dao.getAllUsersList()
                 val user = allUsers.find { it.username == name }
                 user?.let { u ->
-                    val savedPuzzle: Puzzle? = try {
-                        u.savedPuzzleJson?.let { json.decodeFromString<Puzzle>(it) }
+                    val savedPuzzle: com.example.eduapp.model.Puzzle? = try {
+                        u.savedPuzzleJson?.let { json.decodeFromString(it) }
                     } catch (_: Exception) {
                         null
                     }
                     
-                    if (savedPuzzle == null) shouldLoadNew = true
-
                     _gameState.update { it.copy(
                         score = u.savedScore,
                         level = u.savedLevel,
@@ -119,9 +113,9 @@ class AppViewModel(
                         currentPuzzle = savedPuzzle,
                         navigateToGame = true
                     ) }
-                } ?: run { shouldLoadNew = true }
+                }
             }
-            if (shouldLoadNew) {
+            if (_gameState.value.currentPuzzle == null) {
                 loadNewPuzzle()
             }
         }
@@ -166,17 +160,29 @@ class AppViewModel(
         
         if (userAnswer == currentPuzzle.answer) {
             soundManager?.playSuccess()
+            val isFinalLevel = _gameState.value.level >= 20
+            
             _gameState.update { current ->
                 val addedScore = com.example.eduapp.util.MathUtils.calculateScore(10, current.level, 10)
                 val newScore = current.score + addedScore
                 
-                current.copy(
-                    score = newScore,
-                    level = current.level + 1,
-                    message = "Correct!",
-                    showResultDialog = true,
-                    lastSolvedAnswer = currentPuzzle.answer
-                )
+                if (isFinalLevel) {
+                    current.copy(
+                        score = newScore,
+                        message = "Congratulations! You've completed all 20 levels!",
+                        isGameOver = true,
+                        showResultDialog = false,
+                        lastSolvedAnswer = currentPuzzle.answer
+                    )
+                } else {
+                    current.copy(
+                        score = newScore,
+                        level = current.level + 1,
+                        message = "Correct!",
+                        showResultDialog = true,
+                        lastSolvedAnswer = currentPuzzle.answer
+                    )
+                }
             }
             _gameState.value.playerName?.let { saveProgress(it) }
         } else {

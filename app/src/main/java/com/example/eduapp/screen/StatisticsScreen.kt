@@ -25,7 +25,7 @@ import java.util.*
 @Composable
 fun StatisticsScreen(navController: NavController, viewModel: AppViewModel) {
     val users by viewModel.users.collectAsStateWithLifecycle(initialValue = emptyList())
-    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(value = false) }
 
     Scaffold(
         topBar = {
@@ -45,7 +45,7 @@ fun StatisticsScreen(navController: NavController, viewModel: AppViewModel) {
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
                     navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary,
                 )
             )
         },
@@ -110,7 +110,7 @@ fun StatisticsScreen(navController: NavController, viewModel: AppViewModel) {
                             }
                             Spacer(modifier = Modifier.height(12.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("Level reached: ${user.currentLevel}", style = MaterialTheme.typography.bodyMedium)
+                                Text("Level reached: ${user.currentLevel}/20", style = MaterialTheme.typography.bodyMedium)
                                 Text("Solved: ${user.puzzlesSolved}", style = MaterialTheme.typography.bodyMedium)
                             }
                             Spacer(modifier = Modifier.height(8.dp))

@@ -5,4 +5,8 @@ object MathUtils {
         val timeBonus = if (timeTaken < 30) 20 else 0
         return (baseScore * multiplier) + timeBonus
     }
+    
+    fun isLevelUp(currentScore: Int, threshold: Int): Boolean {
+        return currentScore >= threshold
+    }
 }

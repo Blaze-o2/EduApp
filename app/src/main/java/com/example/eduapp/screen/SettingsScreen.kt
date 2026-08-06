@@ -22,7 +22,7 @@ import com.example.eduapp.viewmodel.AppViewModel
 @Composable
 fun SettingsScreen(navController: NavController, viewModel: AppViewModel) {
     val gameState by viewModel.gameState.collectAsStateWithLifecycle()
-    var difficulty by rememberSaveable(gameState.difficultyLevel) { mutableStateOf(gameState.difficultyLevel.toFloat()) }
+    var difficulty by rememberSaveable(gameState.difficultyLevel) { mutableFloatStateOf(gameState.difficultyLevel.toFloat()) }
 
     Scaffold(
         topBar = {
@@ -36,11 +36,11 @@ fun SettingsScreen(navController: NavController, viewModel: AppViewModel) {
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
         Column(
             modifier = Modifier

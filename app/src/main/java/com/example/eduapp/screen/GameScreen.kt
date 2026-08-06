@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.example.eduapp.R
 import com.example.eduapp.model.Puzzle
 import com.example.eduapp.viewmodel.AppViewModel
 
@@ -36,12 +35,12 @@ fun GameScreen(navController: NavController, viewModel: AppViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Puzzle - Level ${gameState.level}", fontWeight = FontWeight.Bold) },
+                title = { Text("Puzzle - Level ${gameState.level}/20", fontWeight = FontWeight.Bold) },
                 actions = {
                     Surface(
                         color = MaterialTheme.colorScheme.secondaryContainer,
                         shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.padding(end = 8.dp)
+                        modifier = Modifier.padding(end = 8.dp),
                     ) {
                         Text(
                             text = "Score: ${gameState.score}",
@@ -79,9 +78,11 @@ fun GameScreen(navController: NavController, viewModel: AppViewModel) {
                 ) {
                     Column(
                         modifier = Modifier
-                            .background(androidx.compose.ui.graphics.Brush.verticalGradient(
-                                listOf(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f), MaterialTheme.colorScheme.surface)
-                            ))
+                            .background(
+                                androidx.compose.ui.graphics.Brush.verticalGradient(
+                                    listOf(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f), MaterialTheme.colorScheme.surface)
+                                )
+                            )
                             .padding(24.dp)
                     ) {
                         puzzle.equations.forEach { equation ->
@@ -174,7 +175,7 @@ fun GameScreen(navController: NavController, viewModel: AppViewModel) {
                             },
                             modifier = Modifier.fillMaxWidth().height(56.dp),
                             shape = RoundedCornerShape(16.dp),
-                            enabled = !gameState.isGameOver && userAnswer.toIntOrNull() != null
+                            enabled = (!gameState.isGameOver) && (userAnswer.toIntOrNull() != null)
                         ) {
                             Text("Submit Answer", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         }
@@ -215,10 +216,16 @@ fun GameScreen(navController: NavController, viewModel: AppViewModel) {
     }
 
     if (gameState.isGameOver) {
+        val isCompletion = gameState.level >= 20 && gameState.message.contains("Congratulations")
         AlertDialog(
             onDismissRequest = { },
-            title = { Text("Game Over") },
-            text = { Text("You've run out of attempts! Better luck next time.") },
+            title = { Text(if (isCompletion) "Game Completed!" else "Game Over") },
+            text = { 
+                Text(
+                    if (isCompletion) "You've successfully solved all 20 puzzles! Amazing job."
+                    else "You've run out of attempts! Better luck next time."
+                ) 
+            },
             confirmButton = {
                 Button(onClick = { 
                     viewModel.resetGame()
@@ -231,13 +238,16 @@ fun GameScreen(navController: NavController, viewModel: AppViewModel) {
     }
 }
 
+@Suppress("DiscouragedApi", "ContextResources")
 @Composable
 fun CharacterImage(name: String, puzzle: Puzzle, size: Int = 24) {
     val context = LocalContext.current
     val imageName = puzzle.characterImages[name]
-    val resId = if (imageName != null) {
-        context.resources.getIdentifier(imageName, "drawable", context.packageName)
-    } else 0
+    val resId = remember(imageName) {
+        if (imageName != null) {
+            context.resources.getIdentifier(imageName, "drawable", context.packageName)
+        } else 0
+    }
     
     if (resId != 0) {
         androidx.compose.foundation.Image(

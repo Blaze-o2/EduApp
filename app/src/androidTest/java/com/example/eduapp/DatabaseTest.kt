@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -70,20 +69,22 @@ class DatabaseTest {
 
     @Test
     @Throws(Exception::class)
-    fun deleteAndClear() = runBlocking {
+    fun deleteAllUsers() = runBlocking {
         val user = User(username = "PlayerToDelete")
         appDao.insert(user)
         appDao.deleteAll()
+        
         val allUsers = appDao.getAllUsers().first()
         assertEquals(0, allUsers.size)
     }
 
     @Test
-    fun getById() = runBlocking {
+    @Throws(Exception::class)
+    fun getUserById() = runBlocking {
         val user = User(id = 99, username = "SpecificUser")
         appDao.insert(user)
+        
         val retrieved = appDao.getUserById(99)
-        assertNotNull(retrieved)
         assertEquals("SpecificUser", retrieved?.username)
     }
 }

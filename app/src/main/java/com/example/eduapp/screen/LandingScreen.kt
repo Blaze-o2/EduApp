@@ -23,7 +23,7 @@ fun LandingScreen(navController: NavController) {
                 title = { Text("Math Puzzle Master", fontWeight = FontWeight.ExtraBold) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
                 )
             ) 
         },
@@ -49,7 +49,7 @@ fun LandingScreen(navController: NavController) {
             ) {
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                     androidx.compose.foundation.Image(
-                        painter = androidx.compose.ui.res.painterResource(id = com.example.eduapp.R.mipmap.ic_launcher),
+                        painter = androidx.compose.ui.res.painterResource(id = com.example.eduapp.R.drawable.app_icon),
                         contentDescription = "App Icon",
                         modifier = Modifier.size(80.dp)
                     )

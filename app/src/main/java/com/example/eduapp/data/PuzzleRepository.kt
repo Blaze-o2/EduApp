@@ -8,7 +8,7 @@ import kotlin.random.Random
 
 class PuzzleRepository(
     val dao: AppDao,
-    private val service: PuzzleService
+    private val service: PuzzleService,
 ) {
     val allUsers: Flow<List<User>> = dao.getAllUsers()
 
@@ -22,7 +22,7 @@ class PuzzleRepository(
     suspend fun fetchNewPuzzle(difficultyLevel: Int, gameLevel: Int): Puzzle {
         return try {
             service.getRandomPuzzle(difficultyLevel)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // Local generation ensures the game is playable offline
             generateLocalPuzzle(difficultyLevel, gameLevel)
         }
@@ -60,10 +60,8 @@ class PuzzleRepository(
         val charValues = selectedChars.associateWith { random.nextInt(2, maxVal) }.toMutableMap()
         
         val equations = mutableListOf<String>()
-        val puzzleType = random.nextInt(3) // 0: Standard, 1: Product, 2: Mixed
-
-        when (puzzleType) {
-            1 -> generateProductPuzzle(equations, selectedChars, charValues, random)
+        when (random.nextInt(3)) {
+            1 -> generateProductPuzzle(equations, selectedChars, charValues)
             2 -> generateMixedPuzzle(equations, selectedChars, charValues, random)
             else -> generateStandardPuzzle(equations, selectedChars, charValues, difficultyLevel)
         }
@@ -112,7 +110,6 @@ class PuzzleRepository(
         equations: MutableList<String>,
         selectedChars: List<String>,
         charValues: MutableMap<String, Int>,
-        random: Random
     ) {
         val char1 = selectedChars[0]
         val char2 = selectedChars[1]
@@ -126,7 +123,7 @@ class PuzzleRepository(
             val char4 = selectedChars[3]
             // Ensure char4 is even so the division is clean
             val originalVal = charValues[char4]!!
-            val evenVal = if (originalVal % 2 != 0) originalVal + 1 else originalVal
+            val evenVal = if ((originalVal % 2) != 0) originalVal + 1 else originalVal
             equations.add("$char4 / 2 = ${evenVal / 2}")
             charValues[char4] = evenVal
         }

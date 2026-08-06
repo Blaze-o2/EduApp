@@ -17,4 +17,10 @@ class MathUtilsTest {
         val score = MathUtils.calculateScore(10, 2, 40)
         assertEquals(20, score) // (10*2) + 0
     }
+
+    @Test
+    fun testLevelUp() {
+        assertEquals(true, MathUtils.isLevelUp(100, 100))
+        assertEquals(false, MathUtils.isLevelUp(99, 100))
+    }
 }
