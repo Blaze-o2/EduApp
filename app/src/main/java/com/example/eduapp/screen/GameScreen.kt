@@ -238,16 +238,11 @@ fun GameScreen(navController: NavController, viewModel: AppViewModel) {
     }
 }
 
-@Suppress("DiscouragedApi", "ContextResources")
 @Composable
 fun CharacterImage(name: String, puzzle: Puzzle, size: Int = 24) {
     val context = LocalContext.current
     val imageName = puzzle.characterImages[name]
-    val resId = remember(imageName) {
-        if (imageName != null) {
-            context.resources.getIdentifier(imageName, "drawable", context.packageName)
-        } else 0
-    }
+    val resId = remember(imageName) { context.getResId(imageName) }
     
     if (resId != 0) {
         androidx.compose.foundation.Image(
@@ -264,6 +259,11 @@ fun CharacterImage(name: String, puzzle: Puzzle, size: Int = 24) {
             modifier = Modifier.padding(horizontal = 2.dp)
         )
     }
+}
+
+@Suppress("DiscouragedApi")
+private fun android.content.Context.getResId(name: String?): Int {
+    return name?.let { resources.getIdentifier(it, "drawable", packageName) } ?: 0
 }
 
 @Composable

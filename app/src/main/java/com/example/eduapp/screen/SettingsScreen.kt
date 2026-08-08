@@ -47,13 +47,13 @@ fun SettingsScreen(navController: NavController, viewModel: AppViewModel) {
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(rememberScrollState()),
         ) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(4.dp)
+                elevation = CardDefaults.cardElevation(4.dp),
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     ListItem(
@@ -62,7 +62,7 @@ fun SettingsScreen(navController: NavController, viewModel: AppViewModel) {
                         trailingContent = {
                             Switch(
                                 checked = gameState.soundEnabled,
-                                onCheckedChange = { viewModel.toggleSound(it) }
+                                onCheckedChange = { viewModel.toggleSound(it) },
                             )
                         },
                         colors = ListItemDefaults.colors(containerColor = Color.Transparent)

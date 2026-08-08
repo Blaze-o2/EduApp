@@ -10,7 +10,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.room.Room
 import com.example.eduapp.data.PuzzleRepository
 import com.example.eduapp.data.PuzzleService
 import com.example.eduapp.database.AppDatabase
